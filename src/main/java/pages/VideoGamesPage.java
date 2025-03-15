@@ -1,6 +1,7 @@
 package pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -31,60 +32,61 @@ public class VideoGamesPage extends BasePage {
         click(sortDropdownOption);
     }
 
-    public void addProductsBelowPriceWithPagination(double price) {
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        boolean itemsFound = false;
-        int maxAttempts = 5; // Safety limit to prevent infinite loops
-        int attempts = 0;
-
+    public void addProductsBelowPriceWithPagination(double maxPrice) {
         try {
+            // Loop through the first 5 pages
+            for (int pageNumber = 1; pageNumber <= 3; pageNumber++) {
+                System.out.println("Processing page: " + pageNumber);
 
-            while (!itemsFound && attempts < maxAttempts) {
-                int added = processPage(price);
+                // Find all product items on the current page
+                List<WebElement> products = driver.findElements(By.cssSelector("[data-component-type='s-search-result']"));
 
-                if (added > 0) {
-                    itemsFound = true;
-                    break;
+                for (WebElement product : products) {
+                    try {
+                        // Check if "Add to Cart" button exists
+                        WebElement addToCartBtn = product.findElement(By.xpath(".//button[text()='Add to cart']"));
+
+                        // Find price element and parse price
+                        WebElement priceElement = product.findElement(By.cssSelector(".a-price .a-offscreen"));
+                        String priceText = priceElement.getAttribute("innerText").replaceAll("[^\\d.]", "");
+                        double price = Double.parseDouble(priceText);
+
+                        // Log price for debugging
+                        System.out.println("Product Price: " + price);
+
+                        // Add to cart if price is below threshold
+                        if (price < maxPrice) {
+                            addToCartBtn.click();
+                            System.out.println("Added item with price: " + price);
+                            // Add explicit wait if needed for confirmation
+                        }
+                    } catch (NoSuchElementException e) {
+                        // Skip items without required elements
+                        System.err.println("Skipping item: Missing 'Add to Cart' button or price.");
+                    } catch (NumberFormatException e) {
+                        // Handle invalid price format
+                        System.err.println("Skipping item: Invalid price format.");
+                    }
                 }
 
-                // Look for next page button
-                WebElement pagination = driver.findElement(By.cssSelector("div.s-pagination-container"));
-                WebElement nextButton = pagination.findElement(By.cssSelector("a.s-pagination-next"));
+                // Navigate to the next page if not on the last page
+                if (pageNumber < 5) {
+                    try {
+                        // Locate the "Next" button or specific page link
+                        WebElement nextPageButton = driver.findElement(By.xpath("//a[contains(@aria-label, 'Go to next page')]"));
+                        nextPageButton.click();
 
-                if (nextButton.getAttribute("aria-disabled") != null &&
-                        nextButton.getAttribute("aria-disabled").equals("true")) {
-                    System.out.println("No more pages available");
-                    break;
+                        // Add a wait to ensure the next page loads completely
+                        Thread.sleep(2000); // Adjust sleep time as needed
+                    } catch (NoSuchElementException e) {
+                        System.err.println("No more pages available. Exiting pagination loop.");
+                        break;
+                    }
                 }
-
-                System.out.println("Moving to next page...");
-                nextButton.click();
-                wait.until(ExpectedConditions.urlContains("page=" + (++attempts + 1)));
             }
-        } catch (Exception e){
-            System.out.println("An error occurred: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    }
-
-    private static int processPage(double price) {
-        int count = 0;
-        List<WebElement> products = driver.findElements(By.cssSelector("[data-component-type='s-search-result']"));
-
-        for (WebElement product : products) {
-                WebElement addToCartBtn = product.findElement(By.xpath(".//button[text()='Add to cart']"));
-                WebElement priceElement = product.findElement(By.cssSelector(".a-price .a-offscreen"));
-
-                String priceText = priceElement.getAttribute("innerText").replaceAll("[^\\d.]", "");
-                double parseDouble = Double.parseDouble(priceText);
-                System.out.println("Price: " + parseDouble);
-                if (parseDouble < price) {
-                    addToCartBtn.click();
-                    System.out.println("Added item with price: " + parseDouble);
-                    count++;
-                }
-        }
-        return count;
-
     }
 
     public void addProductsBelowPriceWithoutPagination(double price2) {
@@ -103,7 +105,7 @@ public class VideoGamesPage extends BasePage {
                     String priceText = priceElement.getAttribute("innerText").replaceAll("[^\\d.]", "");
                     double price = Double.parseDouble(priceText);
                     System.out.println("Price: " + price);
-                    if (price < 30000) {
+                    if (price > price2) {
                         addToCartBtn.click();
                         System.out.println("Added item with price: " + price);
                         // Add wait if needed for confirmation

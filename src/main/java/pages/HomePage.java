@@ -20,6 +20,7 @@ public class HomePage extends BasePage {
         click(allMenuExpand);
         scrollToElement(videoGamesCategory);
         click(videoGamesCategory);
+        Thread.sleep(2000);
         moveToElement(allVideoGamesLink);
         pressEnter(allVideoGamesLink);
     }
