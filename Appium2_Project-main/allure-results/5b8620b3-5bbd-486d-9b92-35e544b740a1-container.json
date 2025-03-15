@@ -1,0 +1,1 @@
+{"uuid":"5b8620b3-5bbd-486d-9b92-35e544b740a1","name":"com.demoAppTest.DemoAppTest","children":["b802f410-8704-431a-bce7-ce6410531df9"],"befores":[{"name":"runApp","status":"passed","stage":"finished","description":"","steps":[],"attachments":[],"parameters":[],"start":1731085790699,"stop":1731085790778}],"afters":[],"start":1731085790657,"stop":1731085851116}

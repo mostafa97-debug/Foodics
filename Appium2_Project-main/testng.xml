@@ -1,0 +1,14 @@
+<suite name="Mobile Testing Exercise">
+    <test name="AppiumPractice">
+        <classes>
+            <class name="com.demoAppTest.DemoAppTest">
+
+                <methods>
+
+                    <include name="CheckOutOrderTest"/>
+
+                </methods>
+            </class>
+        </classes>
+    </test>
+</suite>
